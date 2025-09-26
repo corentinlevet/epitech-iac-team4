@@ -14,9 +14,11 @@ terraform {
   # Remote backend configuration for team collaboration
   # The bucket must be created manually before terraform init
   # Backend config is loaded via -backend-config flag to support multiple environments
-  backend "s3" {
-    # Configuration loaded from ../backends/{env}.config files
-  }
+
+  # TODO: Uncomment when S3 backend is ready
+  # backend "s3" {
+  #   # Configuration loaded from ../backends/{env}.config files
+  # }
 }
 
 # Configure AWS Provider
