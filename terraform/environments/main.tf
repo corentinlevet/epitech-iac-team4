@@ -1,5 +1,6 @@
 # Main Terraform Configuration for Dev Environment
 # Demonstrates Infrastructure as Code principles from C1.md
+# GitHub Actions OIDC integration test - September 26, 2025
 
 terraform {
   required_version = ">= 1.0"
