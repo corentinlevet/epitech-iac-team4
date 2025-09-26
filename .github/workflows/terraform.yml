@@ -61,7 +61,8 @@ jobs:
     name: "Terraform Plan"
     runs-on: ubuntu-latest
     needs: terraform-validate
-    if: github.event_name == 'pull_request'
+    # Run on pull requests OR on any push to test branches (for testing)
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref != 'refs/heads/main')
 
     strategy:
       matrix:
@@ -177,89 +178,6 @@ jobs:
       - name: Terraform Output
         run: terraform output
 
-  terraform-deploy-prod:
-    name: "Deploy to Production"
-    runs-on: ubuntu-latest
-    needs: terraform-validate
-    # C3.md requirement: "Versioning & release (e.g., tagging: v1.0.0); then: Apply changes in prd"
-    if: github.event_name == 'release' && github.event.action == 'published'
-
-    defaults:
-      run:
-        working-directory: ./terraform/environments
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_PROD_ROLE_ARN }}
-          aws-region: us-west-2
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Plan
-        run: terraform plan -var-file="prod.tfvars" -input=false
-
-      # C3.md requirement: "Apply changes in prd"
-      - name: Terraform Apply
-        run: terraform apply -var-file="prod.tfvars" -auto-approve -input=false
-
-      - name: Terraform Output
-        run: terraform output
-
-      - name: Create Deployment Summary
-        run: |
-          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "**Release:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
-          echo "**Region:** us-west-2" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Infrastructure Outputs:" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          terraform output >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-  terraform-apply:
-    name: "Terraform Apply"
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    needs: terraform-validate
-
-    defaults:
-      run:
-        shell: bash
-        working-directory: ./terraform/environments
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: us-east-1
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Apply
-        run: terraform apply -var-file="dev.tfvars" -auto-approve -input=false
-
   terraform-production:
     name: "Terraform Production Deploy"
     if: github.event_name == 'release'
@@ -293,3 +211,18 @@ jobs:
 
       - name: Terraform Apply
         run: terraform apply -var-file="prod.tfvars" -auto-approve -input=false
+
+      - name: Terraform Output
+        run: terraform output
+
+      - name: Create Deployment Summary
+        run: |
+          echo "## Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Release:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** us-west-2" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Infrastructure Outputs:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          terraform output >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
