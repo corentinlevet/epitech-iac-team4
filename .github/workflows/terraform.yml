@@ -211,6 +211,28 @@ jobs:
           echo '```' >> $GITHUB_STEP_SUMMARY
           terraform output >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
+
+  # Development Environment Pipeline (PR)
+  development:
+    name: 'Terraform Development'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    environment: development
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform/environments
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
         continue-on-error: true
