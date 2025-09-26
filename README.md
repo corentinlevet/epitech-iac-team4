@@ -66,6 +66,30 @@ The project implements GitOps principles from C1.md:
 - Different workflows for dev (on push to main) and prod (on release)
 - Automated planning, validation, and deployment
 
+## 🔐 GitHub Actions OIDC Integration
+
+This project uses GitHub Actions with AWS OIDC (OpenID Connect) for secure, keyless authentication:
+
+### ✅ **Completed Setup**
+- **OIDC Provider**: Configured in AWS for `token.actions.githubusercontent.com`
+- **IAM Roles**: 
+  - `GitHubActions-Dev-Role` (Development deployments)
+  - `GitHubActions-Prod-Role` (Production deployments)
+- **Trust Policies**: Restrict access to this specific repository
+- **Permissions**: PowerUserAccess for full infrastructure management
+
+### 🔑 **Required GitHub Secrets**
+Repository secrets configured for secure AWS authentication:
+- `AWS_ROLE_ARN`: Development role ARN
+- `AWS_PROD_ROLE_ARN`: Production role ARN
+
+### 🚀 **Workflow Triggers**
+- **Pull Requests** → Planning and validation for both environments
+- **Push to main** → Deploy to development environment
+- **Create Release** → Deploy to production environment
+
+*Setup completed: September 26, 2025*
+
 ## 🚀 Getting Started
 
 ### Prerequisites (for Team of 4 students)

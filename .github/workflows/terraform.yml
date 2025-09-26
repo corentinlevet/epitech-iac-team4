@@ -1,5 +1,6 @@
 # Multi-Environment GitOps Workflow - C3.md Implementation
 # Implements all C3.md requirements: validation, planning, versioning, deployment
+# GitHub Actions OIDC integration configured on September 26, 2025
 
 name: "Terraform Multi-Environment CI/CD"
 
@@ -217,7 +218,6 @@ jobs:
     name: "Terraform Development"
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    environment: development
     defaults:
       run:
         shell: bash
@@ -289,7 +289,6 @@ jobs:
     name: "Terraform Apply"
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment: dev
     needs: terraform-validate
 
     defaults:
@@ -322,7 +321,6 @@ jobs:
     name: "Terraform Production Deploy"
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    environment: production
 
     defaults:
       run:
