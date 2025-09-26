@@ -11,14 +11,12 @@ on:
       - "terraform/environments/**"
       - "terraform/modules/**"
       - ".github/workflows/**"
-      - "*.md"
   pull_request:
     branches: ["main"]
     paths:
       - "terraform/environments/**"
       - "terraform/modules/**"
       - ".github/workflows/**"
-      - "*.md"
   release:
     types: [published]
 
@@ -89,7 +87,10 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform init -backend-config="../backends/${{ matrix.environment }}.config"
+        run: |
+          # For testing: use local backend until S3 backend is set up
+          terraform init -backend=false
+          # TODO: Later use: terraform init -backend-config="../backends/${{ matrix.environment }}.config"
 
       # C3.md requirement: "Run terraform plan for both environments (dev + prd)"
       - name: Terraform Plan
@@ -154,7 +155,7 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform init -backend-config="../backends/dev.config"
+        run: terraform init -backend=false # TODO: Fix S3 backend setup
 
       - name: Terraform Plan
         run: terraform plan -var-file="dev.tfvars" -input=false
@@ -193,7 +194,7 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform init -backend-config="../backends/prod.config"
+        run: terraform init -backend=false # TODO: Fix S3 backend setup
 
       - name: Terraform Plan
         run: terraform plan -var-file="prod.tfvars" -input=false
@@ -243,7 +244,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init -backend-config="../backends/dev.config"
+        run: terraform init -backend=false # TODO: Fix S3 backend setup
 
       - name: Terraform Validate
         id: validate
@@ -316,7 +317,7 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform init -backend-config="../backends/dev.config"
+        run: terraform init -backend=false # TODO: Fix S3 backend setup
 
       - name: Terraform Apply
         run: terraform apply -var-file="dev.tfvars" -auto-approve -input=false
@@ -347,7 +348,7 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Terraform Init
-        run: terraform init -backend-config="../backends/prod.config"
+        run: terraform init -backend=false # TODO: Fix S3 backend setup
 
       - name: Terraform Plan
         run: terraform plan -var-file="prod.tfvars" -input=false
