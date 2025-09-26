@@ -25,6 +25,12 @@ terraform {
 provider "aws" {
   region = var.region
 
+  # For testing in GitHub Actions without credentials
+  # Skip credentials validation and metadata API
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
   # Default tags applied to all resources
   default_tags {
     tags = {
