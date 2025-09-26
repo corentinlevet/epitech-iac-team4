@@ -1,0 +1,88 @@
+# Manual Destroy Workflow - C3.md Requirement
+# "Provide manual destroy workflows for dev and prd"
+
+name: "Terraform Destroy"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy (dev or prod)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+        default: "dev"
+      confirm_destroy:
+        description: "Type 'DESTROY' to confirm infrastructure destruction"
+        required: true
+        type: string
+
+# Security: Use OIDC for AWS credentials (best practice)
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform-destroy:
+    name: "Destroy Infrastructure - ${{ github.event.inputs.environment }}"
+    runs-on: ubuntu-latest
+
+    # Add safety check
+    if: github.event.inputs.confirm_destroy == 'DESTROY'
+
+    defaults:
+      run:
+        working-directory: ./terraform/environments
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ github.event.inputs.environment == 'dev' && secrets.AWS_ROLE_ARN || secrets.AWS_PROD_ROLE_ARN }}
+          aws-region: ${{ github.event.inputs.environment == 'dev' && 'us-east-1' || 'us-west-2' }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Terraform Init
+        run: terraform init -backend-config="../backends/${{ github.event.inputs.environment }}.config"
+
+      - name: Terraform Plan Destroy
+        run: terraform plan -destroy -var-file="${{ github.event.inputs.environment }}.tfvars" -input=false
+
+      - name: Terraform Destroy
+        run: terraform destroy -var-file="${{ github.event.inputs.environment }}.tfvars" -auto-approve -input=false
+
+      - name: Create Destruction Summary
+        run: |
+          echo "## Infrastructure Destruction Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ github.event.inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** ${{ github.event.inputs.environment == 'dev' && 'us-east-1' || 'us-west-2' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Infrastructure successfully destroyed" >> $GITHUB_STEP_SUMMARY
+
+  destroy-safety-check:
+    name: "Destroy Safety Check Failed"
+    runs-on: ubuntu-latest
+    if: github.event.inputs.confirm_destroy != 'DESTROY'
+
+    steps:
+      - name: Safety Check Failed
+        run: |
+          echo "❌ Destroy operation cancelled" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** Confirmation string 'DESTROY' not provided" >> $GITHUB_STEP_SUMMARY
+          echo "**Input received:** '${{ github.event.inputs.confirm_destroy }}'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "To destroy infrastructure, you must:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Select the environment (dev or prod)" >> $GITHUB_STEP_SUMMARY  
+          echo "2. Type exactly 'DESTROY' in the confirmation field" >> $GITHUB_STEP_SUMMARY
+          exit 1

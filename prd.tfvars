@@ -1,5 +1,0 @@
-project_id        = "team4-prd"
-region            = "eu-west-3"
-vpc_name          = "team4-prd-vpc"
-cidr_block        = "10.1.0.0/16"
-subnet_cidr_block = "10.1.1.0/24"
