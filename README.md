@@ -1,4 +1,4 @@
-# 🚀 Terraform Project with AWS Backend (S3 + DynamoDB)
+# 🚀 Terraform Project with AWS Backend (S3 + DynamoDB) — Updated
 
 ## 📌 Objective
 Set up a shared Terraform infrastructure on **AWS**, including:
@@ -6,7 +6,7 @@ Set up a shared Terraform infrastructure on **AWS**, including:
 - **AWS CLI**: configure local access to AWS
 - **S3**: store `terraform.tfstate`
 - **DynamoDB**: manage Terraform locks
-- **Terraform**: provision and manage cloud infrastructure as a team
+- **Terraform**: provision and manage VPC + Subnet collaboratively
 
 ---
 
@@ -59,20 +59,12 @@ Provide:
 ```bash
 aws sts get-caller-identity --profile firstname
 ```
-Expected output:
-```json
-{
-  "UserId": "AIDAEXAMPLE12345",
-  "Account": "123456789012",
-  "Arn": "arn:aws:iam::123456789012:user/firstname-lastname"
-}
-```
 
 ---
 
-## 3️⃣ Setting up the Terraform Backend
+## 3️⃣ Backend Setup (S3 + DynamoDB)
 
-### A. Create S3 bucket
+Create S3 bucket:
 ```bash
 aws s3api create-bucket   --bucket terraform-backend-epitech-2025   --region eu-west-3   --create-bucket-configuration LocationConstraint=eu-west-3
 ```
@@ -82,127 +74,86 @@ Enable versioning:
 aws s3api put-bucket-versioning   --bucket terraform-backend-epitech-2025   --versioning-configuration Status=Enabled   --region eu-west-3
 ```
 
-### B. Create DynamoDB table
+Create DynamoDB table:
 ```bash
 aws dynamodb create-table   --table-name terraform-locks   --attribute-definitions AttributeName=LockID,AttributeType=S   --key-schema AttributeName=LockID,KeyType=HASH   --billing-mode PAY_PER_REQUEST   --region eu-west-3
 ```
 
-Verify:
-```bash
-aws dynamodb list-tables --region eu-west-3
-```
-
 ---
 
-## 4️⃣ Terraform Project Example
+## 4️⃣ Terraform Project Structure
 
-### Project structure
 ```
-terraform-demo/
+terraform-vpc/
  ├── main.tf
+ ├── networking.tf
  ├── variables.tf
- └── outputs.tf
+ ├── outputs.tf
+ ├── dev.tfvars
+ └── backends/dev.config
 ```
 
-### `main.tf`
-```hcl
-terraform {
-  required_version = ">= 1.8.0"
-
-  backend "s3" {
-    bucket         = "terraform-backend-epitech-2025"
-    key            = "state/terraform.tfstate"
-    region         = "eu-west-3"
-    dynamodb_table = "terraform-locks"
-    encrypt        = true
-  }
-
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
-resource "aws_s3_bucket" "example" {
-  bucket = "terraform-demo-bucket-${random_id.suffix.hex}"
-}
-
-resource "random_id" "suffix" {
-  byte_length = 4
-}
-```
-
-### `variables.tf`
-```hcl
-variable "aws_region" {
-  type    = string
-  default = "eu-west-3"
-}
-```
-
-### `outputs.tf`
-```hcl
-output "bucket_name" {
-  value = aws_s3_bucket.example.bucket
-}
-```
-
----
-
-## 5️⃣ Terraform Commands
-
-Initialize the project:
+Initialize Terraform:
 ```bash
-terraform init
+terraform init -backend-config=backends/dev.config
 ```
 
-Check the execution plan:
+Plan and apply:
 ```bash
-terraform plan
+terraform plan -var-file=dev.tfvars
+terraform apply -var-file=dev.tfvars
 ```
 
-Apply the configuration:
+Check outputs:
 ```bash
-terraform apply
+terraform output
 ```
-Confirm with `yes`.
 
 ---
 
-## 6️⃣ Verification
+## 5️⃣ Import Backend Resources (if created manually)
 
-- **AWS S3** → bucket `terraform-demo-bucket-xxxx` should be created.  
-- **Backend S3** → file `state/terraform.tfstate` should appear in `terraform-backend-epitech-2025`.  
-- **DynamoDB** → `terraform-locks` table should show entries during concurrent `apply`.  
+```bash
+terraform import -var-file=dev.tfvars aws_s3_bucket.backend terraform-backend-epitech-2025
+terraform import -var-file=dev.tfvars aws_dynamodb_table.terraform_locks terraform-locks
+```
 
----
+Recheck plan:
+```bash
+terraform plan -var-file=dev.tfvars
+```
 
-## 7️⃣ Team Collaboration
-
-1. Each member configures their IAM profile via:
-   ```bash
-   aws configure --profile firstname
-   ```
-2. Clone the `terraform-demo/` repo.  
-3. Run:
-   ```bash
-   terraform init
-   terraform plan
-   terraform apply
-   ```
-   👉 Everyone will use the **same shared state**.
+Expected: no changes.
 
 ---
 
-## ✅ Summary
-- IAM: `terraform-team` group + IAM users.  
-- AWS CLI: configured with IAM keys.  
-- Backend: S3 bucket + DynamoDB table.  
-- Terraform: project stores state in S3, manages locks via DynamoDB.  
-- Teamwork: all members share the same Terraform state.
+## 6️⃣ Safe Destroy & Recreate Cycle
+
+Because the backend has `prevent_destroy = true` for safety, you should only destroy **VPC and Subnet**, not the backend.
+
+### Destroy only VPC and Subnet
+```bash
+terraform destroy -var-file=dev.tfvars   -target=aws_subnet.main   -target=aws_vpc.main
+```
+
+### Or quicker (destroy VPC → subnet goes with it)
+```bash
+terraform destroy -var-file=dev.tfvars -target=aws_vpc.main
+```
+
+### Recreate
+```bash
+terraform apply -var-file=dev.tfvars
+```
+
+---
+
+## ✅ Checklist
+
+- [x] IAM group & users created  
+- [x] AWS CLI configured with IAM keys  
+- [x] S3 backend bucket + DynamoDB table created  
+- [x] Terraform initialized with remote backend  
+- [x] VPC + Subnet provisioned  
+- [x] Backend imported & protected (`prevent_destroy`)  
+- [x] Safe destroy/recreate workflow tested  
