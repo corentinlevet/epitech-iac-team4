@@ -1,5 +1,6 @@
 # Main Terraform Configuration for Dev Environment
 # Demonstrates Infrastructure as Code principles from C1.md
+# GitHub Actions OIDC integration test - September 26, 2025
 
 terraform {
   required_version = ">= 1.0"
@@ -13,14 +14,22 @@ terraform {
   # Remote backend configuration for team collaboration
   # The bucket must be created manually before terraform init
   # Backend config is loaded via -backend-config flag to support multiple environments
-  backend "s3" {
-    # Configuration loaded from ../backends/{env}.config files
-  }
+
+  # TODO: Uncomment when S3 backend is ready
+  # backend "s3" {
+  #   # Configuration loaded from ../backends/{env}.config files
+  # }
 }
 
 # Configure AWS Provider
 provider "aws" {
   region = var.region
+
+  # For testing in GitHub Actions without credentials
+  # Skip credentials validation and metadata API
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
 
   # Default tags applied to all resources
   default_tags {
