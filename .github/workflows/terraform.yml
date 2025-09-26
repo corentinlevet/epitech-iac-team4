@@ -10,11 +10,13 @@ on:
     paths:
       - "terraform/environments/**"
       - "terraform/modules/**"
+      - ".github/workflows/**"
   pull_request:
     branches: ["main"]
     paths:
       - "terraform/environments/**"
       - "terraform/modules/**"
+      - ".github/workflows/**"
   release:
     types: [published]
 
