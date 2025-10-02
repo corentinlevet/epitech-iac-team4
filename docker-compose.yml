@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15.14
+    container_name: taskmanager-db
+    environment:
+      POSTGRES_DB: taskmanager
+      POSTGRES_USER: taskmanager_user
+      POSTGRES_PASSWORD: localdev123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - taskmanager-network
+
+  task-manager:
+    build: 
+      context: ./applications/task-manager
+      dockerfile: Dockerfile
+    container_name: taskmanager-api
+    environment:
+      DATABASE_URL: postgresql://taskmanager_user:localdev123@postgres:5432/taskmanager
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    networks:
+      - taskmanager-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  taskmanager-network:
+    driver: bridge
