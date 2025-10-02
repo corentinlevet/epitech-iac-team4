@@ -1,0 +1,355 @@
+# Monitoring Stack Configuration
+
+# Global settings
+global:
+  # Storage class for persistent volumes
+  storageClass: "gp3"
+
+# Kube-Prometheus-Stack configuration
+kube-prometheus-stack:
+  enabled: true
+
+  # Prometheus configuration
+  prometheus:
+    enabled: true
+
+    prometheusSpec:
+      # Retention settings
+      retention: 15d
+      retentionSize: 50GiB
+
+      # Storage configuration
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: gp3
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 100Gi
+
+      # Resource limits
+      resources:
+        limits:
+          cpu: 2000m
+          memory: 8Gi
+        requests:
+          cpu: 500m
+          memory: 2Gi
+
+      # Service monitor selector
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+      # External URL for Prometheus
+      externalUrl: ""
+
+      # Additional scrape configs
+      additionalScrapeConfigs:
+        - job_name: "task-manager"
+          kubernetes_sd_configs:
+            - role: endpoints
+              namespaces:
+                names:
+                  - default
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_service_name]
+              action: keep
+              regex: task-manager
+            - source_labels: [__meta_kubernetes_endpoint_port_name]
+              action: keep
+              regex: http
+
+        - job_name: "github-runners"
+          kubernetes_sd_configs:
+            - role: pod
+              namespaces:
+                names:
+                  - github-runners
+          relabel_configs:
+            - source_labels: [__meta_kubernetes_pod_label_app]
+              action: keep
+              regex: github-runner
+
+  # Grafana configuration
+  grafana:
+    enabled: true
+
+    # Admin credentials (use secrets in production)
+    adminPassword: "admin123" # Change in production
+
+    # Persistence
+    persistence:
+      enabled: true
+      storageClassName: gp3
+      size: 10Gi
+
+    # Resources
+    resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+    # Ingress configuration
+    ingress:
+      enabled: true
+      ingressClassName: alb
+      annotations:
+        kubernetes.io/ingress.class: alb
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/target-type: ip
+        alb.ingress.kubernetes.io/ssl-redirect: "443"
+        alb.ingress.kubernetes.io/certificate-arn: "" # Set via values override
+      hosts:
+        - grafana.student-team4.local
+      tls:
+        - secretName: grafana-tls
+          hosts:
+            - grafana.student-team4.local
+
+    # Grafana configuration
+    grafana.ini:
+      server:
+        root_url: "https://grafana.student-team4.local"
+      security:
+        allow_embedding: true
+      auth:
+        disable_login_form: false
+      auth.anonymous:
+        enabled: false
+
+    # Default dashboards
+    defaultDashboardsEnabled: true
+
+    # Additional dashboards
+    dashboardProviders:
+      dashboardproviders.yaml:
+        apiVersion: 1
+        providers:
+          - name: "custom-dashboards"
+            orgId: 1
+            folder: "Custom"
+            type: file
+            disableDeletion: false
+            editable: true
+            options:
+              path: /var/lib/grafana/dashboards/custom
+
+    dashboards:
+      custom-dashboards:
+        task-manager-dashboard:
+          gnetId: 14031 # FastAPI dashboard
+          revision: 1
+          datasource: Prometheus
+
+        kubernetes-cluster:
+          gnetId: 7249 # Kubernetes cluster monitoring
+          revision: 1
+          datasource: Prometheus
+
+        github-runners:
+          gnetId: 9614 # Custom runners dashboard
+          revision: 1
+          datasource: Prometheus
+
+  # AlertManager configuration
+  alertmanager:
+    enabled: true
+
+    alertmanagerSpec:
+      # Storage configuration
+      storage:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: gp3
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Gi
+
+      # Resources
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+
+    # Alert routing configuration
+    config:
+      global:
+        smtp_smarthost: "localhost:587"
+        smtp_from: "alerts@student-team4.local"
+
+      route:
+        group_by: ["alertname"]
+        group_wait: 10s
+        group_interval: 10s
+        repeat_interval: 1h
+        receiver: "webhook"
+
+      receivers:
+        - name: "webhook"
+          webhook_configs:
+            - url: "http://example.com/webhook" # Configure your webhook
+              send_resolved: true
+
+  # Node Exporter
+  nodeExporter:
+    enabled: true
+
+  # Kube State Metrics
+  kubeStateMetrics:
+    enabled: true
+
+  # Prometheus Operator
+  prometheusOperator:
+    enabled: true
+
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# Loki Stack for Log Aggregation
+loki-stack:
+  enabled: true
+
+  loki:
+    enabled: true
+
+    # Persistence
+    persistence:
+      enabled: true
+      storageClassName: gp3
+      size: 50Gi
+
+    # Configuration
+    config:
+      storage_config:
+        boltdb_shipper:
+          active_index_directory: /data/loki/boltdb-shipper-active
+          cache_location: /data/loki/boltdb-shipper-cache
+          shared_store: filesystem
+        filesystem:
+          directory: /data/loki/chunks
+
+      compactor:
+        working_directory: /data/loki/boltdb-shipper-compactor
+        shared_store: filesystem
+
+      limits_config:
+        retention_period: 168h # 7 days
+
+    # Resources
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+  # Promtail for log collection
+  promtail:
+    enabled: true
+
+    config:
+      clients:
+        - url: http://loki:3100/loki/api/v1/push
+
+    # Resources
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+  # Fluent Bit (alternative to Promtail)
+  fluent-bit:
+    enabled: false
+
+# Custom alerts for Task Manager and GitHub Runners
+customAlerts:
+  enabled: true
+
+  # Task Manager alerts
+  taskManagerAlerts:
+    - alert: TaskManagerDown
+      expr: up{job="task-manager"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Task Manager is down"
+        description: "Task Manager has been down for more than 5 minutes"
+
+    - alert: TaskManagerHighLatency
+      expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="task-manager"}[5m])) > 0.5
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Task Manager high latency"
+        description: "95th percentile latency is above 500ms"
+
+    - alert: TaskManagerHighErrorRate
+      expr: rate(http_requests_total{job="task-manager",status=~"5.."}[5m]) / rate(http_requests_total{job="task-manager"}[5m]) > 0.1
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Task Manager high error rate"
+        description: "Error rate is above 10%"
+
+  # GitHub Runners alerts
+  githubRunnersAlerts:
+    - alert: GitHubRunnersDown
+      expr: up{job="github-runners"} == 0
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "No GitHub runners available"
+        description: "All GitHub runners are down"
+
+    - alert: GitHubRunnersHighUsage
+      expr: (github_runners_busy / github_runners_total) > 0.8
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "GitHub runners high usage"
+        description: "More than 80% of runners are busy"
+
+# Service monitors for custom applications
+serviceMonitors:
+  taskManager:
+    enabled: true
+    namespace: default
+    labels:
+      app: task-manager
+    endpoints:
+      - port: http
+        path: /metrics
+        interval: 30s
+
+  githubRunners:
+    enabled: true
+    namespace: github-runners
+    labels:
+      app: github-runner
+    endpoints:
+      - port: metrics
+        path: /metrics
+        interval: 30s

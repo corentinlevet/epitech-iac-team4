@@ -1,0 +1,200 @@
+# Default values for github-runners.
+
+# GitHub configuration
+github:
+  # GitHub repository URL (will be set via Terraform)
+  repository: ""
+
+  # GitHub App credentials (stored in Kubernetes secret)
+  auth:
+    secret:
+      name: "github-auth"
+      keys:
+        app_id: "app_id"
+        app_installation_id: "app_installation_id"
+        app_private_key: "app_private_key"
+
+# Runner configuration
+runner:
+  # Runner image
+  image:
+    repository: "sumologic/kubernetes-tools"
+    tag: "2.14.0"
+    pullPolicy: IfNotPresent
+
+  # Runner labels for workflow targeting
+  labels:
+    - "self-hosted"
+    - "linux"
+    - "terraform"
+    - "kubernetes"
+
+  # Runner group (optional)
+  group: "default"
+
+  # Resource limits
+  resources:
+    limits:
+      cpu: "2000m"
+      memory: "4Gi"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+# Scaling configuration
+scaling:
+  # Minimum number of runners
+  minReplicas: 1
+
+  # Maximum number of runners
+  maxReplicas: 10
+
+  # Scale up threshold (pending jobs)
+  scaleUpThreshold: 0.75
+
+  # Scale down delay
+  scaleDownDelay: "5m"
+
+  # Metrics for autoscaling
+  metrics:
+    # Scale based on percentage of busy runners
+    percentageRunnersBusy:
+      scaleUpThreshold: "0.75"
+      scaleDownThreshold: "0.25"
+      scaleUpFactor: "2"
+      scaleDownFactor: "0.5"
+
+# Node selection for runners
+nodeSelector:
+  role: "github-runner"
+
+# Tolerations for dedicated runner nodes
+tolerations:
+  - key: "github-runner"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+# Docker-in-Docker configuration
+dockerInDocker:
+  enabled: true
+  image:
+    repository: "docker"
+    tag: "24-dind"
+  resources:
+    limits:
+      cpu: "1000m"
+      memory: "2Gi"
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+  storageSize: "20Gi"
+  storageClass: "gp3"
+
+# Monitoring
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    labels:
+      app: "github-runners"
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+# Network policy
+networkPolicy:
+  enabled: true
+  egress:
+    # Allow egress to GitHub APIs
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    # Allow DNS
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+
+# Cleanup job for removing stale runners
+cleanup:
+  enabled: true
+  schedule: "0 */6 * * *" # Every 6 hours
+  image:
+    repository: "curlimages/curl"
+    tag: "8.4.0"
+
+# Actions Runner Controller configuration
+actions-runner-controller:
+  enabled: true
+
+  # Controller configuration
+  controller:
+    image:
+      repository: "sumologic/kubernetes-tools"
+      tag: "2.14.0"
+
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+
+  # Webhook configuration for scaling
+  webhook:
+    enabled: true
+    service:
+      type: ClusterIP
+      port: 8080
+
+    resources:
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+
+# Environment-specific overrides
+environments:
+  dev:
+    scaling:
+      minReplicas: 1
+      maxReplicas: 3
+    resources:
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+      requests:
+        cpu: "250m"
+        memory: "512Mi"
+
+  prod:
+    scaling:
+      minReplicas: 2
+      maxReplicas: 10
+    resources:
+      limits:
+        cpu: "2000m"
+        memory: "4Gi"
+      requests:
+        cpu: "500m"
+        memory: "1Gi"

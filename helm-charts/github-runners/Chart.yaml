@@ -1,0 +1,25 @@
+apiVersion: v2
+name: github-runners
+description: A Helm chart for GitHub Actions self-hosted runners
+type: application
+version: 0.1.0
+appVersion: "latest"
+
+keywords:
+  - github-actions
+  - self-hosted-runners
+  - ci-cd
+  - automation
+
+home: https://github.com/corentinlevet/epitech-iac-team4
+sources:
+  - https://github.com/corentinlevet/epitech-iac-team4
+
+maintainers:
+  - name: Team 4
+    email: corentin.levet@epitech.eu
+
+dependencies:
+  - name: actions-runner-controller
+    version: "0.23.7"
+    repository: "https://actions-runner-controller.github.io/actions-runner-controller"

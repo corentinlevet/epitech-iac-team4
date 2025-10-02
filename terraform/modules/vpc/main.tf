@@ -15,13 +15,14 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_subnet" "main" {
+  count                   = 2
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = var.subnet_cidr_block
-  availability_zone       = data.aws_availability_zones.available.names[0]
+  cidr_block              = cidrsubnet(var.cidr_block, 8, count.index + 1)
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   tags = {
-    Name        = "${var.vpc_name}-subnet"
+    Name        = "${var.vpc_name}-subnet-${count.index + 1}"
     Environment = var.environment
     Project     = var.project_name
     ManagedBy   = "Terraform"
@@ -56,7 +57,8 @@ resource "aws_route_table" "main" {
 }
 
 resource "aws_route_table_association" "main" {
-  subnet_id      = aws_subnet.main.id
+  count          = 2
+  subnet_id      = aws_subnet.main[count.index].id
   route_table_id = aws_route_table.main.id
 }
 

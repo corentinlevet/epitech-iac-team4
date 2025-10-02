@@ -1,0 +1,29 @@
+apiVersion: v2
+name: monitoring
+description: Complete monitoring stack with Prometheus and Grafana
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - monitoring
+  - prometheus
+  - grafana
+  - observability
+  - metrics
+
+home: https://github.com/corentinlevet/epitech-iac-team4
+sources:
+  - https://github.com/corentinlevet/epitech-iac-team4
+
+maintainers:
+  - name: Team 4
+    email: corentin.levet@epitech.eu
+
+dependencies:
+  - name: kube-prometheus-stack
+    version: "51.2.0"
+    repository: "https://prometheus-community.github.io/helm-charts"
+  - name: loki-stack
+    version: "2.9.11"
+    repository: "https://grafana.github.io/helm-charts"

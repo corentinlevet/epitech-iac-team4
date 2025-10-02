@@ -12,13 +12,23 @@ output "vpc_cidr_block" {
 }
 
 output "subnet_id" {
-  value       = aws_subnet.main.id
-  description = "The ID of the created subnet"
+  value       = aws_subnet.main[0].id
+  description = "The ID of the first subnet"
+}
+
+output "subnet_ids" {
+  value       = aws_subnet.main[*].id
+  description = "The IDs of all created subnets"
 }
 
 output "subnet_cidr_block" {
-  value       = aws_subnet.main.cidr_block
-  description = "The CIDR block of the subnet"
+  value       = aws_subnet.main[0].cidr_block
+  description = "The CIDR block of the first subnet"
+}
+
+output "subnet_cidr_blocks" {
+  value       = aws_subnet.main[*].cidr_block
+  description = "The CIDR blocks of all subnets"
 }
 
 output "internet_gateway_id" {
@@ -32,6 +42,11 @@ output "route_table_id" {
 }
 
 output "availability_zone" {
-  value       = aws_subnet.main.availability_zone
-  description = "The availability zone of the subnet"
+  value       = aws_subnet.main[0].availability_zone
+  description = "The availability zone of the first subnet"
+}
+
+output "availability_zones" {
+  value       = aws_subnet.main[*].availability_zone
+  description = "The availability zones of all subnets"
 }
