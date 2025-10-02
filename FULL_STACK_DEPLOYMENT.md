@@ -37,17 +37,52 @@ A complete full-stack Task Manager application successfully deployed on AWS EKS,
 ### Using the Frontend Web Interface
 1. Visit the frontend URL in your browser
 2. Check the API status (should show green ✅)
-3. Use the form to create new tasks:
-   - Enter a task title (required)
-   - Add an optional description
-   - Click "Create Task"
-4. View all tasks in the list below
-5. Delete tasks using the red "Delete" button
+3. **Login with any credentials**:
+   - Enter any username (e.g., "demo", "user", "test")
+   - Enter any password (e.g., "password", "123", "test")
+   - Click "Login" (this is a demo - any combination works!)
+4. Once logged in, you can:
+   - Create new tasks using the form
+   - View all your tasks in the list
+   - Delete tasks using the red "Delete" button
+5. Your login session is saved in the browser
 
 ### Using the Backend API Directly
-You can interact with the API directly using curl or any HTTP client:
 
-#### Health Check
+#### Step 1: Login to get an access token
+```bash
+curl -X POST http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "demo", "password": "test123"}'
+```
+
+Response:
+```json
+{
+  "access_token": "demo_token_demo_xxxxxxxxxxxxxxxxxxxx",
+  "token_type": "bearer",
+  "user_id": "demo"
+}
+```
+
+#### Step 2: Use the token for API calls
+```bash
+# Get all tasks
+curl -H "Authorization: Bearer demo_token_demo_xxxxxxxxxxxxxxxxxxxx" \
+  http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/tasks
+
+# Create a task
+curl -X POST http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/tasks \
+  -H "Authorization: Bearer demo_token_demo_xxxxxxxxxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "My API Task", "description": "Created via API"}'
+
+# Delete a task
+curl -X DELETE http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/tasks/1 \
+  -H "Authorization: Bearer demo_token_demo_xxxxxxxxxxxxxxxxxxxx"
+```
+
+#### Health Check (No Authentication Required)
 ```bash
 curl http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/health
 ```
@@ -57,15 +92,6 @@ Visit the interactive Swagger documentation:
 ```
 http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/docs
 ```
-
-#### Create a Task (requires authentication)
-```bash
-curl -X POST http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title": "My Task", "description": "Task description"}'
-```
-
-Note: Some operations require authentication depending on the API configuration.
 
 ## 🏗️ Infrastructure Details
 
@@ -101,21 +127,26 @@ The frontend application automatically tests the backend API integration:
 ## 📊 Application Features
 
 ### Frontend Features
-- ✅ Real-time API status monitoring
-- ✅ Task creation with validation
-- ✅ Task listing with metadata
-- ✅ Task deletion with confirmation
-- ✅ Error and success message handling
-- ✅ Responsive design
-- ✅ Direct links to API documentation
+- ✅ **User Authentication**: Login system with demo credentials (any username/password works)
+- ✅ **Session Management**: Login state persisted in browser localStorage
+- ✅ **Real-time API Status Monitoring**: Live connection status to backend
+- ✅ **Task Management**: Create, view, and delete tasks with real-time updates
+- ✅ **Form Validation**: Client-side validation for required fields
+- ✅ **Error Handling**: Comprehensive error messages and user feedback
+- ✅ **Responsive Design**: Mobile-friendly interface
+- ✅ **Authentication Flow**: Automatic token management and re-authentication
+- ✅ **Direct API Links**: Easy access to backend documentation
 
 ### Backend Features
-- ✅ RESTful API endpoints
-- ✅ Database persistence
-- ✅ Health check endpoint
-- ✅ OpenAPI/Swagger documentation
-- ✅ Error handling and validation
-- ✅ Environment-based configuration
+- ✅ **JWT Authentication**: Secure token-based authentication system
+- ✅ **RESTful API Endpoints**: Complete CRUD operations for tasks
+- ✅ **Database Persistence**: PostgreSQL with proper data types and constraints
+- ✅ **Health Check Endpoint**: Monitoring and load balancer compatibility
+- ✅ **OpenAPI/Swagger Documentation**: Interactive API documentation
+- ✅ **CORS Configuration**: Proper cross-origin support for frontend
+- ✅ **Error Handling and Validation**: Comprehensive error responses
+- ✅ **Environment-based Configuration**: Secure configuration management
+- ✅ **Simple Demo Authentication**: Easy testing with any credentials
 
 ## 🔧 Technical Stack
 
