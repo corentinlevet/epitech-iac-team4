@@ -1,0 +1,55 @@
+# EKS values for task-manager-frontend
+replicaCount: 1
+
+image:
+  repository: 758888582253.dkr.ecr.us-east-1.amazonaws.com/task-manager-frontend
+  pullPolicy: Always
+  tag: "latest"
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 3000
+
+# Resource configuration for t3.micro nodes
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Remove nodeSelector to allow scheduling on any node
+nodeSelector: null
+
+# Add tolerations to allow scheduling on github-runner nodes
+tolerations:
+  - key: "github-runner"
+    operator: "Equal"
+    value: "true"
+    effect: "NoSchedule"
+
+# Environment variables - point to backend API
+env:
+  - name: REACT_APP_API_URL
+    value: "http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com"
+
+# Probes
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+
+# Disable autoscaling for t3.micro constraint
+autoscaling:
+  enabled: false
