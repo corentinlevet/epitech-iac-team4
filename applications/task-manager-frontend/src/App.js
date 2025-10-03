@@ -3,7 +3,7 @@ import axios from 'axios';
 import './App.css';
 
 // Configuration - use environment variable or fallback to loadbalancer URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://aa4d1d03368b04f00b0585e5a85359a6-743131538.us-east-1.elb.amazonaws.com';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://a5dda51db0b2d4dbeb49d4aa6c79f3a0-256327804.us-east-1.elb.amazonaws.com';
 
 function App() {
   const [tasks, setTasks] = useState([]);

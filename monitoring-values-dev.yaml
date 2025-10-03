@@ -1,0 +1,100 @@
+# Lightweight monitoring configuration for development environment
+kube-prometheus-stack:
+  enabled: true
+
+  # Prometheus configuration - lightweight
+  prometheus:
+    enabled: true
+    prometheusSpec:
+      retention: 7d
+      retentionSize: 10GiB
+
+      # Minimal storage
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: gp2
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 20Gi
+
+      # Minimal resources
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1Gi
+        requests:
+          cpu: 200m
+          memory: 512Mi
+
+      # Service monitor configuration
+      serviceMonitorSelectorNilUsesHelmValues: false
+      podMonitorSelectorNilUsesHelmValues: false
+      ruleSelectorNilUsesHelmValues: false
+
+  # Grafana configuration - lightweight
+  grafana:
+    enabled: true
+    adminPassword: "admin123"
+
+    # Minimal persistence
+    persistence:
+      enabled: true
+      storageClassName: gp2
+      size: 5Gi
+
+    # Minimal resources
+    resources:
+      limits:
+        cpu: 200m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+    # Service configuration
+    service:
+      type: ClusterIP
+      port: 80
+
+  # Alertmanager - disabled for development
+  alertmanager:
+    enabled: false
+
+  # Node Exporter - minimal
+  nodeExporter:
+    enabled: true
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  # Kube State Metrics - minimal
+  kubeStateMetrics:
+    enabled: true
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  # Prometheus Operator - minimal
+  prometheusOperator:
+    enabled: true
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+# Loki-stack - disabled for now to save resources
+loki-stack:
+  enabled: false

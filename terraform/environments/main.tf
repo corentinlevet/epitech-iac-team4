@@ -23,21 +23,14 @@ terraform {
   # The bucket must be created manually before terraform init
   # Backend config is loaded via -backend-config flag to support multiple environments
 
-  # TODO: Uncomment when S3 backend is ready
-  # backend "s3" {
-  #   # Configuration loaded from ../backends/{env}.config files
-  # }
+  backend "s3" {
+    # Configuration loaded from ../backends/{env}.config files
+  }
 }
 
 # Configure AWS Provider
 provider "aws" {
   region = var.region
-
-  # For testing in GitHub Actions without credentials
-  # Skip credentials validation and metadata API
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
 
   # Default tags applied to all resources
   default_tags {
@@ -142,36 +135,36 @@ module "rds" {
 
 # Helm Releases - C4.md Implementation
 
-# Deploy AWS Load Balancer Controller - temporarily commented out
-# resource "helm_release" "aws_load_balancer_controller" {
-#   name       = "aws-load-balancer-controller"
-#   repository = "https://aws.github.io/eks-charts"
-#   chart      = "aws-load-balancer-controller"
-#   version    = "1.6.2"
-#   namespace  = "kube-system"
-# 
-#   set {
-#     name  = "clusterName"
-#     value = module.eks.cluster_name
-#   }
-# 
-#   set {
-#     name  = "serviceAccount.create"
-#     value = "true"
-#   }
-# 
-#   set {
-#     name  = "serviceAccount.name"
-#     value = "aws-load-balancer-controller"
-#   }
-# 
-#   set {
-#     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
-#     value = module.eks.load_balancer_controller_role_arn
-#   }
-# 
-#   depends_on = [module.eks]
-# }
+# Deploy AWS Load Balancer Controller
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  version    = "1.6.2"
+  namespace  = "kube-system"
+
+  set {
+    name  = "clusterName"
+    value = module.eks.cluster_name
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "true"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = module.eks.load_balancer_controller_role_arn
+  }
+
+  depends_on = [module.eks]
+}
 
 # Kubernetes Secret for Database Credentials - temporarily commented out
 # resource "kubernetes_secret" "db_credentials" {

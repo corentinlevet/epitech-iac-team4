@@ -1,8 +1,8 @@
 # Default values for task-manager-frontend
-replicaCount: 2
+replicaCount: 1
 
 image:
-  repository: task-manager-frontend
+  repository: 758888582253.dkr.ecr.us-east-1.amazonaws.com/task-manager-frontend
   pullPolicy: Always
   tag: "latest"
 
@@ -26,7 +26,7 @@ podSecurityContext:
 securityContext:
   capabilities:
     drop:
-    - ALL
+      - ALL
   readOnlyRootFilesystem: true
   runAsNonRoot: true
   runAsUser: 1001

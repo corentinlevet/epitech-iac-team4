@@ -1,12 +1,12 @@
 # Default values for task-manager.
 # This is a YAML-formatted file.
 
-replicaCount: 3
+replicaCount: 1
 
 image:
-  repository: task-manager
+  repository: 758888582253.dkr.ecr.us-east-1.amazonaws.com/task-manager
   pullPolicy: IfNotPresent
-  tag: "latest"
+  tag: "v3"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -66,21 +66,20 @@ ingress:
 
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 100m
+    memory: 128Mi
   requests:
-    cpu: 250m
-    memory: 256Mi
+    cpu: 50m
+    memory: 64Mi
 
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 3
   maxReplicas: 10
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
-nodeSelector:
-  role: application
+nodeSelector: {}
 
 tolerations: []
 
@@ -100,9 +99,9 @@ affinity:
 # Database configuration
 database:
   # Database connection will be provided via Secrets Manager
-  secretName: "" # Set via Terraform
+  secretName: "task-manager-db-credentials" # Set via Terraform
   secretKeys:
-    url: "url"
+    url: "database_url"
     host: "host"
     port: "port"
     name: "dbname"

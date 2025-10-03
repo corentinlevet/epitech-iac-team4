@@ -1,0 +1,127 @@
+# Minimal production-ready monitoring for t3.micro nodes
+# Global tolerations for GitHub runner node
+global:
+  storageClass: gp2
+
+# Prometheus configuration
+prometheus:
+  enabled: true
+
+  prometheusSpec:
+    retention: 7d
+    retentionSize: 15GiB
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+
+    resources:
+      limits:
+        cpu: 800m
+        memory: 1.5Gi
+      requests:
+        cpu: 400m
+        memory: 1Gi
+
+    tolerations:
+      - key: github-runner
+        operator: Equal
+        value: "true"
+        effect: NoSchedule
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+
+# Grafana configuration
+grafana:
+  enabled: true
+  adminPassword: "admin123"
+
+  persistence:
+    enabled: true
+    storageClassName: gp2
+    size: 5Gi
+
+  resources:
+    limits:
+      cpu: 300m
+      memory: 512Mi
+    requests:
+      cpu: 150m
+      memory: 256Mi
+
+  tolerations:
+    - key: github-runner
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+
+  defaultDashboardsEnabled: true
+
+# Disable resource-intensive components
+alertmanager:
+  enabled: false
+
+# Minimal node exporter
+nodeExporter:
+  enabled: true
+  tolerations:
+    - key: github-runner
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Minimal kube-state-metrics
+kubeStateMetrics:
+  enabled: true
+  tolerations:
+    - key: github-runner
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Prometheus Operator
+prometheusOperator:
+  enabled: true
+  tolerations:
+    - key: github-runner
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  admissionWebhooks:
+    enabled: true
+    patch:
+      enabled: true
+      tolerations:
+        - key: github-runner
+          operator: Equal
+          value: "true"
+          effect: NoSchedule
