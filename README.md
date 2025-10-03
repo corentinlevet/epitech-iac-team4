@@ -1,32 +1,36 @@
 # Infrastructure as Code - Team 4 Project
 
-This project demonstrates the Infrastructure as Code (IaC) principles and GitOps concepts covered in Course 1 (C1.md), implemented for a team of 4 students using AWS and Terraform.
+This project demonstrates a complete cloud-native Kubernetes architecture implemented using Infrastructure as Code (IaC) principles, containerization, and comprehensive monitoring.
 
 ## 🏗️ Project Structure
 
 ```
 .
-├── .github/
-│   └── workflows/
-│       └── terraform.yml          # GitOps CI/CD pipeline
-├── terraform/
-│   ├── modules/
-│   │   └── vpc/                   # Reusable VPC module
-│   │       ├── main.tf
-│   │       ├── variables.tf
-│   │       └── outputs.tf
-│   ├── environments/              # Environment configurations
-│   │   ├── main.tf               # Main Terraform configuration
-│   │   ├── variables.tf          # Variable definitions
-│   │   ├── outputs.tf            # Output definitions
-│   │   ├── dev.tfvars            # Development environment values
-│   │   └── prod.tfvars           # Production environment values
-│   └── backends/                 # Backend configurations
-│       ├── dev.config            # Development backend config
-│       └── prod.config           # Production backend config
-├── C1.md                         # Course 1 content (theory)
-├── C2.md                         # Course 2 content (hands-on)
-└── README.md                     # This file
+├── 📁 applications/              # Application source code
+│   ├── task-manager/            # FastAPI backend with Prometheus metrics
+│   └── task-manager-frontend/   # React frontend application
+├── 📁 configs/                  # Configuration files
+│   ├── aws-iam/                # AWS IAM policies and GitHub OIDC setup
+│   └── helm-values/            # Helm chart values for different environments
+├── 📁 docs/                    # Comprehensive documentation
+│   ├── C1.md - C4.md          # Course content and implementation guides
+│   ├── IMPLEMENTATION.md       # Technical implementation details
+│   └── DEMO.md                # Demo and access instructions
+├── 📁 helm-charts/             # Kubernetes applications as Helm charts
+│   ├── monitoring/            # Prometheus & Grafana monitoring stack
+│   ├── task-manager/          # Backend API Helm chart
+│   └── task-manager-frontend/ # Frontend application Helm chart
+├── 📁 kubernetes-manifests/   # Raw Kubernetes YAML files
+│   ├── database/             # PostgreSQL database manifests
+│   └── monitoring/           # Monitoring stack configurations
+├── 📁 scripts/                # Automation and setup scripts
+├── 📁 terraform/              # Infrastructure as Code
+│   ├── environments/         # Environment-specific configurations
+│   └── modules/              # Reusable infrastructure modules (VPC, EKS, RDS)
+├── 📁 .github/               # CI/CD workflows
+│   └── workflows/            # GitHub Actions for automation
+├── docker-compose.yml        # Local development environment
+└── DIRECTORY_STRUCTURE.md    # Detailed directory organization guide
 ```
 
 ## 🎯 Terraform Principles Implementation
