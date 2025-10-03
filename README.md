@@ -1,53 +1,278 @@
-# Infrastructure as Code - Team 4 Project
+# 🚀 Cloud-Native Task Manager - Complete Infrastructure as Code
 
-This project demonstrates a complete cloud-native Kubernetes architecture implemented using Infrastructure as Code (IaC) principles, containerization, and comprehensive monitoring.
+[![AWS](https://img.shields.io/badge/AWS-EKS-FF9900?style=flat-square&logo=amazon-aws)](https://aws.amazon.com/eks/)
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-1.28-326CE5?style=flat-square&logo=kubernetes)](https://kubernetes.io/)
+[![Terraform](https://img.shields.io/badge/Terraform-1.5+-7C3AED?style=flat-square&logo=terraform)](https://terraform.io/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker)](https://docker.com/)
 
-## 🏗️ Project Structure
+> **A complete cloud-native application stack demonstrating Infrastructure as Code, containerization, Kubernetes orchestration, and comprehensive monitoring - deployed on AWS EKS.**
+
+## 📋 Table of Contents
+
+- [� Project Overview](#-project-overview)
+- [✨ Features](#-features)
+- [🏗️ Architecture](#️-architecture)
+- [🚀 Quick Start](#-quick-start)
+- [� Documentation](#-documentation)
+- [🔧 Development](#-development)
+- [🌐 Access Your Deployment](#-access-your-deployment)
+- [🛠️ Troubleshooting](#️-troubleshooting)
+- [🤝 Contributing](#-contributing)
+
+## 🎯 Project Overview
+
+This repository contains a **production-ready cloud-native task management application** built with modern DevOps practices:
+
+- **🏢 Backend**: FastAPI with Prometheus metrics and PostgreSQL database
+- **🎨 Frontend**: React SPA with responsive design and real-time API integration
+- **☁️ Infrastructure**: AWS EKS cluster with VPC, Load Balancers, and RDS
+- **� Monitoring**: Complete observability stack with Prometheus and Grafana
+- **🔄 Automation**: Infrastructure as Code with Terraform and Helm charts
+- **🔐 Security**: IAM roles, service accounts, and secure networking
+
+## ✨ Features
+
+### 🎯 **Application Features**
+- ✅ **Task Management**: Create, update, delete, and track tasks
+- ✅ **User Authentication**: Secure login/logout functionality
+- ✅ **Real-time Updates**: Live task status and API health monitoring
+- ✅ **Responsive Design**: Works seamlessly on desktop and mobile
+- ✅ **API Documentation**: Interactive Swagger/OpenAPI documentation
+
+### 🏗️ **Infrastructure Features**
+- ✅ **Auto-scaling EKS Cluster**: Kubernetes v1.28 with node auto-scaling
+- ✅ **Load Balancing**: AWS Application Load Balancer with health checks
+- ✅ **Database**: PostgreSQL with persistent storage and backups
+- ✅ **Monitoring**: Prometheus metrics + Grafana dashboards
+- ✅ **Security**: IAM roles, security groups, and encrypted storage
+- ✅ **CI/CD Ready**: GitHub Actions integration and GitOps workflows
+
+## 🏗️ Architecture
 
 ```
-.
-├── 📁 applications/              # Application source code
-│   ├── task-manager/            # FastAPI backend with Prometheus metrics
-│   └── task-manager-frontend/   # React frontend application
-├── 📁 configs/                  # Configuration files
-│   ├── aws-iam/                # AWS IAM policies and GitHub OIDC setup
-│   └── helm-values/            # Helm chart values for different environments
-├── 📁 docs/                    # Comprehensive documentation
-│   ├── C1.md - C4.md          # Course content and implementation guides
-│   ├── IMPLEMENTATION.md       # Technical implementation details
-│   └── DEMO.md                # Demo and access instructions
-├── 📁 helm-charts/             # Kubernetes applications as Helm charts
-│   ├── monitoring/            # Prometheus & Grafana monitoring stack
-│   ├── task-manager/          # Backend API Helm chart
-│   └── task-manager-frontend/ # Frontend application Helm chart
-├── 📁 kubernetes-manifests/   # Raw Kubernetes YAML files
-│   ├── database/             # PostgreSQL database manifests
-│   └── monitoring/           # Monitoring stack configurations
-├── 📁 scripts/                # Automation and setup scripts
-├── 📁 terraform/              # Infrastructure as Code
-│   ├── environments/         # Environment-specific configurations
-│   └── modules/              # Reusable infrastructure modules (VPC, EKS, RDS)
-├── 📁 .github/               # CI/CD workflows
-│   └── workflows/            # GitHub Actions for automation
-├── docker-compose.yml        # Local development environment
-└── DIRECTORY_STRUCTURE.md    # Detailed directory organization guide
+┌─────────────────────────────────────────────────────────────────┐
+│                           AWS Cloud                             │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                VPC (10.0.0.0/16)                         │  │
+│  │  ┌─────────────────┐  ┌─────────────────────────────────┐ │  │
+│  │  │  Public Subnets │  │        Private Subnets          │ │  │
+│  │  │                 │  │  ┌───────────────────────────┐  │ │  │
+│  │  │ ┌─────────────┐ │  │  │       EKS Cluster         │  │ │  │
+│  │  │ │     ALB     │ │  │  │  ┌─────┐ ┌─────┐ ┌─────┐  │  │ │  │
+│  │  │ └─────────────┘ │  │  │  │Front│ │ API │ │ DB  │  │  │ │  │
+│  │  │ ┌─────────────┐ │  │  │  │ end │ │     │ │     │  │  │ │  │
+│  │  │ │ NAT Gateway │ │  │  │  └─────┘ └─────┘ └─────┘  │  │ │  │
+│  │  │ └─────────────┘ │  │  │  ┌─────┐ ┌─────┐          │  │ │  │
+│  │  └─────────────────┘  │  │  │Prom.│ │Graf.│          │  │ │  │
+│  │                       │  │  └─────┘ └─────┘          │  │ │  │
+│  │                       │  └───────────────────────────┘  │ │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌─────────────┐  ┌─────────────┐                               │
+│  │     ECR     │  │     RDS     │                               │
+│  │ (Containers)│  │(PostgreSQL) │                               │
+│  └─────────────┘  └─────────────┘                               │
+└─────────────────────────────────────────────────────────────────┘
+        ▲                    ▲
+        │                    │
+    👤 Users              👨‍💻 Developers
 ```
 
-## 🎯 Terraform Principles Implementation
+## 🚀 Quick Start
 
-This project demonstrates the three core Terraform principles from C1.md:
+### Prerequisites
 
-### 1. **Reproducibility** 
-- ✅ Same Terraform configuration creates identical infrastructure across environments
-- ✅ Modular design allows consistent VPC deployment in dev/prod
-- ✅ Environment-specific variable files ensure predictable outcomes
+Before starting, ensure you have:
 
-### 2. **Idempotence**
-- ✅ Running `terraform apply` multiple times produces the same result
-- ✅ Terraform state tracks actual infrastructure vs. desired state
-- ✅ Drift detection identifies manual changes and corrects them
+- ✅ **AWS Account** with administrative access
+- ✅ **AWS CLI** configured with your credentials
+- ✅ **Docker Desktop** installed and running
+- ✅ **Terraform** v1.5+ installed
+- ✅ **kubectl** installed
+- ✅ **Helm** v3+ installed
+- ✅ **Git** with SSH keys configured
 
-### 3. **Versioning**
+### 🎬 One-Command Deployment
+
+```bash
+# Clone the repository
+git clone git@github.com:EpitechPGE45-2025/G-CLO-900-PAR-9-1-infraascode-4.git
+cd G-CLO-900-PAR-9-1-infraascode-4
+
+# Run the complete deployment script
+./scripts/deploy.sh
+
+# Access your applications (URLs will be displayed after deployment)
+```
+
+### 🔧 Manual Step-by-Step Deployment
+
+If you prefer manual control or need to customize the deployment:
+
+#### 1. **Infrastructure Setup**
+```bash
+# Initialize and deploy infrastructure
+cd terraform/environments
+terraform init
+terraform plan -var-file="dev.tfvars"
+terraform apply -var-file="dev.tfvars"
+
+# Configure kubectl for your new EKS cluster
+aws eks update-kubeconfig --region us-east-1 --name student-team4-iac-dev-cluster
+```
+
+#### 2. **Application Deployment**
+```bash
+# Deploy monitoring stack
+kubectl apply -f kubernetes-manifests/monitoring/final-prometheus.yaml
+kubectl apply -f kubernetes-manifests/monitoring/final-grafana.yaml
+
+# Deploy applications using Helm
+helm install task-manager helm-charts/task-manager/
+helm install task-manager-frontend helm-charts/task-manager-frontend/
+```
+
+#### 3. **Verify Deployment**
+```bash
+# Check all pods are running
+kubectl get pods --all-namespaces
+
+# Get application URLs
+kubectl get services --all-namespaces | grep LoadBalancer
+```
+
+## � Documentation
+
+Our comprehensive documentation is organized by use case:
+
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| **[🚀 Setup Guide](docs/SETUP.md)** | Complete installation and configuration | DevOps Engineers |
+| **[🏗️ Architecture Guide](docs/ARCHITECTURE.md)** | Technical architecture and design decisions | Solution Architects |
+| **[📊 Monitoring Guide](docs/MONITORING.md)** | Observability, metrics, and dashboards | SRE Teams |
+| **[🔧 Operations Guide](docs/OPERATIONS.md)** | Day-to-day operations and maintenance | Operations Teams |
+| **[🛡️ Security Guide](docs/SECURITY.md)** | Security configurations and best practices | Security Engineers |
+| **[🚨 Troubleshooting](docs/TROUBLESHOOTING.md)** | Common issues and solutions | All Users |
+
+## 🔧 Development
+
+### Local Development Environment
+
+```bash
+# Start local development environment
+docker-compose up -d
+
+# Access local services
+echo "Frontend: http://localhost:3000"
+echo "Backend: http://localhost:8000"
+echo "Grafana: http://localhost:3001"
+```
+
+### Making Changes
+
+1. **Infrastructure Changes**: Modify files in `terraform/`
+2. **Application Changes**: Update source code in `applications/`
+3. **Configuration Changes**: Edit files in `configs/`
+4. **Documentation**: Update relevant files in `docs/`
+
+## 🌐 Access Your Deployment
+
+After successful deployment, you can access:
+
+### 🎯 **Applications**
+- **📱 Task Manager Frontend**: Main application interface
+- **🔧 API Documentation**: Interactive API docs and testing
+- **� Prometheus**: Metrics collection and querying
+- **📈 Grafana**: Beautiful dashboards and monitoring
+
+> **URLs are displayed after deployment completes!**
+
+### 🔑 **Default Credentials**
+- **Grafana**: `admin` / `admin` (change on first login)
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+<details>
+<summary><b>🚨 Pods stuck in Pending state</b></summary>
+
+**Cause**: Insufficient node capacity
+**Solution**:
+```bash
+# Check node capacity
+kubectl describe nodes
+
+# Scale node groups if needed
+aws eks update-nodegroup-config --cluster-name <cluster-name> --nodegroup-name <nodegroup-name> --scaling-config desiredSize=3
+```
+</details>
+
+<details>
+<summary><b>🚨 LoadBalancer not getting external IP</b></summary>
+
+**Cause**: AWS Load Balancer Controller not running or misconfigured
+**Solution**:
+```bash
+# Check controller status
+kubectl get pods -n kube-system | grep aws-load-balancer
+
+# Restart if needed
+kubectl rollout restart deployment aws-load-balancer-controller -n kube-system
+```
+</details>
+
+<details>
+<summary><b>🚨 Terraform state issues</b></summary>
+
+**Cause**: State drift or lock issues
+**Solution**:
+```bash
+# Refresh state
+terraform refresh -var-file="dev.tfvars"
+
+# If locked, force unlock (use carefully)
+terraform force-unlock <lock-id>
+```
+</details>
+
+For more detailed troubleshooting, see **[🚨 Troubleshooting Guide](docs/TROUBLESHOOTING.md)**.
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to get started:
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** your changes: `git commit -m 'Add amazing feature'`
+4. **Push** to the branch: `git push origin feature/amazing-feature`
+5. **Open** a Pull Request
+
+### Development Standards
+
+- ✅ **Code Quality**: Follow language-specific best practices
+- ✅ **Documentation**: Update docs for any changes
+- ✅ **Testing**: Add tests for new functionality
+- ✅ **Security**: Follow security best practices
+- ✅ **Infrastructure**: Use Terraform for all infrastructure changes
+
+## 📊 Project Stats
+
+- **📁 Languages**: TypeScript, Python, HCL, YAML
+- **🏗️ Infrastructure**: 3 Terraform modules, 4 Helm charts
+- **📱 Applications**: 2 containerized microservices
+- **☁️ AWS Services**: EKS, VPC, RDS, ECR, ALB, IAM
+- **📊 Monitoring**: 15+ custom metrics, 5+ dashboards
+
+---
+
+<div align="center">
+
+**⭐ Star this repository if it helped you!**
+
+Made with ❤️ by **Team 4** | [Report Bug](../../issues) | [Request Feature](../../issues)
+
+</div>
 - ✅ All Terraform code is stored in Git
 - ✅ Backend state is versioned and locked
 - ✅ GitOps workflow enforces code review and approval process
