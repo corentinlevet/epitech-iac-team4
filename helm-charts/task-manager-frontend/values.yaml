@@ -2,9 +2,9 @@
 replicaCount: 1
 
 image:
-  repository: 758888582253.dkr.ecr.us-east-1.amazonaws.com/task-manager-frontend
-  pullPolicy: Always
-  tag: "latest"
+  repository: 281089587503.dkr.ecr.us-east-1.amazonaws.com/task-manager-frontend
+  pullPolicy: IfNotPresent
+  tag: "v2"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -32,16 +32,21 @@ securityContext:
   runAsUser: 1001
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 80
-  targetPort: 3000
+  targetPort: 80
 
 ingress:
-  enabled: false
-  className: ""
-  annotations: {}
+  enabled: true
+  className: "alb"
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/subnets: subnet-01c5062327d175654,subnet-0bd839ffd1fdb0475
   hosts:
-    - host: task-manager-frontend.local
+    - host: app.student-team4.local
       paths:
         - path: /
           pathType: Prefix

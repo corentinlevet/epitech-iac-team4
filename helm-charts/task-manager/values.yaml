@@ -4,9 +4,9 @@
 replicaCount: 1
 
 image:
-  repository: 758888582253.dkr.ecr.us-east-1.amazonaws.com/task-manager
+  repository: 281089587503.dkr.ecr.us-east-1.amazonaws.com/task-manager
   pullPolicy: IfNotPresent
-  tag: "v3"
+  tag: "v4"
 
 imagePullSecrets: []
 nameOverride: ""

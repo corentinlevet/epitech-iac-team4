@@ -13,11 +13,6 @@ spec:
       labels:
         app: grafana
     spec:
-      tolerations:
-        - key: github-runner
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
       containers:
         - name: grafana
           image: grafana/grafana:10.0.0
@@ -28,11 +23,11 @@ spec:
               value: "admin123"
           resources:
             requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
               memory: "256Mi"
               cpu: "200m"
-            limits:
-              memory: "512Mi"
-              cpu: "400m"
           volumeMounts:
             - name: grafana-storage
               mountPath: /var/lib/grafana

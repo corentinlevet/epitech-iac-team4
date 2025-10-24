@@ -142,6 +142,7 @@ resource "helm_release" "aws_load_balancer_controller" {
   chart      = "aws-load-balancer-controller"
   version    = "1.6.2"
   namespace  = "kube-system"
+  timeout    = 600 # Increase timeout to 10 minutes
 
   set {
     name  = "clusterName"
@@ -161,6 +162,21 @@ resource "helm_release" "aws_load_balancer_controller" {
   set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = module.eks.load_balancer_controller_role_arn
+  }
+
+  set {
+    name  = "replicaCount"
+    value = "1" # Reduce to 1 replica to avoid scheduling issues
+  }
+
+  set {
+    name  = "resources.requests.cpu"
+    value = "100m"
+  }
+
+  set {
+    name  = "resources.requests.memory"
+    value = "128Mi"
   }
 
   depends_on = [module.eks]

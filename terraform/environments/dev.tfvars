@@ -20,9 +20,9 @@ runner_min_size       = 0
 
 # Application Nodes - Development
 app_instance_types = ["t3.micro"]
-app_desired_size   = 1
-app_max_size       = 2
-app_min_size       = 1
+app_desired_size   = 3
+app_max_size       = 4
+app_min_size       = 3
 
 # RDS Configuration - Development (smaller instance)
 postgres_version           = "15.14"

@@ -19,11 +19,6 @@ spec:
         app: prometheus
     spec:
       serviceAccountName: prometheus
-      tolerations:
-        - key: github-runner
-          operator: Equal
-          value: "true"
-          effect: NoSchedule
       containers:
         - name: prometheus
           image: prom/prometheus:v2.45.0
@@ -38,11 +33,11 @@ spec:
             - "--web.enable-lifecycle"
           resources:
             requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
               memory: "256Mi"
               cpu: "200m"
-            limits:
-              memory: "512Mi"
-              cpu: "400m"
           volumeMounts:
             - name: config
               mountPath: /etc/prometheus
