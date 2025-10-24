@@ -249,9 +249,19 @@ jobs:
 
       - name: Deploy Monitoring Stack
         run: |
+          echo "📊 Deploying monitoring stack..."
+          
+          # Create monitoring namespace if it doesn't exist
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Deploy monitoring components
           kubectl apply -f kubernetes-manifests/monitoring/prometheus-rbac.yaml
           kubectl apply -f kubernetes-manifests/monitoring/final-prometheus.yaml
           kubectl apply -f kubernetes-manifests/monitoring/final-grafana.yaml
+          
+          echo "⏳ Waiting for monitoring pods..."
+          kubectl wait --for=condition=ready pod -l app=prometheus -n monitoring --timeout=300s || true
+          kubectl wait --for=condition=ready pod -l app=grafana -n monitoring --timeout=300s || true
 
       - name: Install Helm
         uses: azure/setup-helm@v4
@@ -371,9 +381,19 @@ jobs:
 
       - name: Deploy Monitoring Stack
         run: |
+          echo "📊 Deploying monitoring stack to production..."
+          
+          # Create monitoring namespace if it doesn't exist
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+          
+          # Deploy monitoring components
           kubectl apply -f kubernetes-manifests/monitoring/prometheus-rbac.yaml
           kubectl apply -f kubernetes-manifests/monitoring/final-prometheus.yaml
           kubectl apply -f kubernetes-manifests/monitoring/final-grafana.yaml
+          
+          echo "⏳ Waiting for monitoring pods..."
+          kubectl wait --for=condition=ready pod -l app=prometheus -n monitoring --timeout=300s || true
+          kubectl wait --for=condition=ready pod -l app=grafana -n monitoring --timeout=300s || true
 
       - name: Install Helm
         uses: azure/setup-helm@v4
