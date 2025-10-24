@@ -302,15 +302,35 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "🚀 Deploying applications with Helm..."
+          echo "ECR Registry: $ECR_REGISTRY"
+          echo "Image Tag: $IMAGE_TAG"
+          
+          echo "Deploying backend..."
           helm upgrade --install task-manager ./helm-charts/task-manager/ \
             --wait --timeout 10m \
             --set image.repository=$ECR_REGISTRY/task-manager \
-            --set image.tag=$IMAGE_TAG
+            --set image.tag=$IMAGE_TAG \
+            --debug || {
+              echo "❌ Backend deployment failed, checking pods..."
+              kubectl get pods
+              kubectl describe pods -l app.kubernetes.io/name=task-manager
+              exit 1
+            }
           
+          echo "Deploying frontend..."
           helm upgrade --install task-manager-frontend ./helm-charts/task-manager-frontend/ \
             --wait --timeout 10m \
             --set image.repository=$ECR_REGISTRY/task-manager-frontend \
-            --set image.tag=$IMAGE_TAG
+            --set image.tag=$IMAGE_TAG \
+            --debug || {
+              echo "❌ Frontend deployment failed, checking pods..."
+              kubectl get pods
+              kubectl describe pods -l app.kubernetes.io/name=task-manager-frontend
+              exit 1
+            }
+          
+          echo "✅ Applications deployed successfully!"
+          kubectl get pods
 
   deploy-prod-infrastructure:
     name: "�� Deploy Infrastructure - PROD"
