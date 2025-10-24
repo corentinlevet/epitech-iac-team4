@@ -80,4 +80,51 @@ output "aws_console_links" {
   }
 }
 
+# ============================================================================
+# GitHub Actions OIDC Outputs
+# ============================================================================
+
+output "github_actions_oidc_provider_arn" {
+  description = "ARN of the GitHub Actions OIDC provider"
+  value       = aws_iam_openid_connect_provider.github_actions.arn
+}
+
+output "github_actions_role_dev_arn" {
+  description = "ARN of the GitHub Actions role for development environment"
+  value       = aws_iam_role.github_actions_dev.arn
+}
+
+output "github_actions_role_prod_arn" {
+  description = "ARN of the GitHub Actions role for production environment"
+  value       = aws_iam_role.github_actions_prod.arn
+}
+
+output "github_actions_setup_instructions" {
+  description = "Instructions for setting up GitHub Actions secrets"
+  value       = <<-EOT
+    🚀 GitHub Actions CI/CD Setup
+    =============================
+    
+    Add these secrets to your GitHub repository:
+    Settings → Secrets and variables → Actions → New repository secret
+    
+    Secret 1:
+    Name:  AWS_ROLE_ARN_DEV
+    Value: ${aws_iam_role.github_actions_dev.arn}
+    
+    Secret 2:
+    Name:  AWS_ROLE_ARN_PROD
+    Value: ${aws_iam_role.github_actions_prod.arn}
+    
+    GitHub Environments:
+    1. Settings → Environments → New environment
+    2. Create "development" (branch: main)
+    3. Create "production" (tags: v*.*.*, add reviewers)
+    
+    ✅ OIDC Provider: ${aws_iam_openid_connect_provider.github_actions.arn}
+    ✅ Dev Role:      ${aws_iam_role.github_actions_dev.arn}
+    ✅ Prod Role:     ${aws_iam_role.github_actions_prod.arn}
+  EOT
+}
+
 # Instructor PGP key from C3.md appendix

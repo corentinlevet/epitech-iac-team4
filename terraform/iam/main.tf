@@ -38,11 +38,40 @@ provider "aws" {
   }
 }
 
-# Configure GitHub Provider
+# Configure GitHub Provider (optional - only needed for collaborator management)
 provider "github" {
-  token = var.github_token
+  token = var.github_token != "" ? var.github_token : null
   owner = var.github_organization
 }
+
+# ============================================================================
+# OIDC Provider for GitHub Actions (Required for CI/CD)
+# ============================================================================
+
+# Create OpenID Connect provider for GitHub Actions
+resource "aws_iam_openid_connect_provider" "github_actions" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  # GitHub's OIDC thumbprint - this is the official GitHub thumbprint
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1",
+    "1c58a3a8518e8759bf075b76b750d4f2df264fcd"
+  ]
+
+  tags = {
+    Name      = "GitHub Actions OIDC Provider"
+    ManagedBy = "Terraform"
+    Purpose   = "CI/CD Authentication"
+  }
+}
+
+# ============================================================================
+# IAM Users
+# ============================================================================
 
 # Create IAM user for instructor (Jeremie)
 resource "aws_iam_user" "instructor" {
@@ -207,4 +236,88 @@ resource "local_file" "instructor_gpg_key" {
   filename        = "${path.module}/credentials/jeremie_public_key.asc"
   content         = var.instructor_pgp_key
   file_permission = "0644"
+}
+
+# ============================================================================
+# GitHub Actions Roles for CI/CD (OIDC)
+# ============================================================================
+
+# IAM Role for GitHub Actions - Development Environment
+resource "aws_iam_role" "github_actions_dev" {
+  name        = "GitHubActionsRole-dev"
+  description = "Role for GitHub Actions to deploy to development environment"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github_actions.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_organization}/${var.github_repository}:*"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "GitHub Actions - Development"
+    Environment = "dev"
+    ManagedBy   = "Terraform"
+    Purpose     = "CI/CD"
+  }
+}
+
+# IAM Role for GitHub Actions - Production Environment
+resource "aws_iam_role" "github_actions_prod" {
+  name        = "GitHubActionsRole-prod"
+  description = "Role for GitHub Actions to deploy to production environment"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = aws_iam_openid_connect_provider.github_actions.arn
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+          }
+          StringLike = {
+            "token.actions.githubusercontent.com:sub" = "repo:${var.github_organization}/${var.github_repository}:*"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "GitHub Actions - Production"
+    Environment = "prod"
+    ManagedBy   = "Terraform"
+    Purpose     = "CI/CD"
+  }
+}
+
+# Attach Administrator Access to both GitHub Actions roles
+# Required for full infrastructure deployment (VPC, EKS, RDS, ECR, etc.)
+resource "aws_iam_role_policy_attachment" "github_actions_dev_admin" {
+  role       = aws_iam_role.github_actions_dev.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_prod_admin" {
+  role       = aws_iam_role.github_actions_prod.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }

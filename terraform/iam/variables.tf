@@ -9,8 +9,9 @@ variable "region" {
 
 variable "github_token" {
   type        = string
-  description = "GitHub personal access token for repository management"
+  description = "GitHub personal access token for repository management (optional for OIDC setup)"
   sensitive   = true
+  default     = ""
 }
 
 variable "github_organization" {
