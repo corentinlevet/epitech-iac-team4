@@ -314,6 +314,8 @@ jobs:
               echo "❌ Backend deployment failed, checking pods..."
               kubectl get pods
               kubectl describe pods -l app.kubernetes.io/name=task-manager
+              echo "📋 Pod logs:"
+              kubectl logs -l app.kubernetes.io/name=task-manager --tail=100 || true
               exit 1
             }
           
@@ -326,6 +328,8 @@ jobs:
               echo "❌ Frontend deployment failed, checking pods..."
               kubectl get pods
               kubectl describe pods -l app.kubernetes.io/name=task-manager-frontend
+              echo "📋 Pod logs:"
+              kubectl logs -l app.kubernetes.io/name=task-manager-frontend --tail=100 || true
               exit 1
             }
           
