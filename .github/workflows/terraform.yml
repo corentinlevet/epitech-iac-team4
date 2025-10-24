@@ -266,11 +266,42 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
 
+      - name: Create Database Secret
+        working-directory: ./terraform/environments
+        run: |
+          echo "📝 Creating database credentials secret..."
+          DB_SECRET_ARN=$(terraform output -raw db_credentials_secret_arn 2>/dev/null || echo "")
+          
+          if [ -n "$DB_SECRET_ARN" ]; then
+            DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$DB_SECRET_ARN" --query SecretString --output text)
+            
+            DB_URL=$(echo "$DB_CREDS" | jq -r '.url // empty')
+            DB_HOST=$(echo "$DB_CREDS" | jq -r '.host // empty' | cut -d: -f1)
+            DB_PORT=$(echo "$DB_CREDS" | jq -r '.port // empty')
+            DB_NAME=$(echo "$DB_CREDS" | jq -r '.dbname // empty')
+            DB_USER=$(echo "$DB_CREDS" | jq -r '.username // empty')
+            DB_PASS=$(echo "$DB_CREDS" | jq -r '.password // empty')
+            
+            kubectl create secret generic task-manager-db-credentials \
+              --from-literal=database_url="$DB_URL" \
+              --from-literal=host="$DB_HOST" \
+              --from-literal=port="$DB_PORT" \
+              --from-literal=dbname="$DB_NAME" \
+              --from-literal=username="$DB_USER" \
+              --from-literal=password="$DB_PASS" \
+              --dry-run=client -o yaml | kubectl apply -f -
+            
+            echo "✅ Database secret created successfully"
+          else
+            echo "⚠️  No database secret ARN found, skipping DB secret creation"
+          fi
+
       - name: Deploy Applications with Helm
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          echo "🚀 Deploying applications with Helm..."
           helm upgrade --install task-manager ./helm-charts/task-manager/ \
             --wait --timeout 10m \
             --set image.repository=$ECR_REGISTRY/task-manager \
@@ -397,6 +428,36 @@ jobs:
 
       - name: Install Helm
         uses: azure/setup-helm@v4
+
+      - name: Create Database Secret
+        working-directory: ./terraform/environments
+        run: |
+          echo "📝 Creating database credentials secret for production..."
+          DB_SECRET_ARN=$(terraform output -raw db_credentials_secret_arn 2>/dev/null || echo "")
+          
+          if [ -n "$DB_SECRET_ARN" ]; then
+            DB_CREDS=$(aws secretsmanager get-secret-value --secret-id "$DB_SECRET_ARN" --query SecretString --output text)
+            
+            DB_URL=$(echo "$DB_CREDS" | jq -r '.url // empty')
+            DB_HOST=$(echo "$DB_CREDS" | jq -r '.host // empty' | cut -d: -f1)
+            DB_PORT=$(echo "$DB_CREDS" | jq -r '.port // empty')
+            DB_NAME=$(echo "$DB_CREDS" | jq -r '.dbname // empty')
+            DB_USER=$(echo "$DB_CREDS" | jq -r '.username // empty')
+            DB_PASS=$(echo "$DB_CREDS" | jq -r '.password // empty')
+            
+            kubectl create secret generic task-manager-db-credentials \
+              --from-literal=database_url="$DB_URL" \
+              --from-literal=host="$DB_HOST" \
+              --from-literal=port="$DB_PORT" \
+              --from-literal=dbname="$DB_NAME" \
+              --from-literal=username="$DB_USER" \
+              --from-literal=password="$DB_PASS" \
+              --dry-run=client -o yaml | kubectl apply -f -
+            
+            echo "✅ Database secret created successfully"
+          else
+            echo "⚠️  No database secret ARN found, skipping DB secret creation"
+          fi
 
       - name: Deploy to Production
         env:
