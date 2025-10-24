@@ -296,6 +296,25 @@ jobs:
             echo "⚠️  No database secret ARN found, skipping DB secret creation"
           fi
 
+      - name: Cleanup Helm Releases
+        run: |
+          echo "🧹 Cleaning up any stuck Helm releases..."
+          
+          # Check for pending releases and delete them
+          for release in task-manager task-manager-frontend; do
+            if helm status $release 2>/dev/null | grep -q "pending-"; then
+              echo "Deleting stuck release: $release"
+              helm delete $release --wait || true
+            fi
+          done
+          
+          # Delete old/failed pods to free up resources
+          echo "🗑️ Cleaning up old pods..."
+          kubectl delete pods --field-selector=status.phase=Failed --all-namespaces || true
+          kubectl delete pods --field-selector=status.phase=Succeeded --all-namespaces || true
+          
+          echo "✅ Cleanup completed"
+
       - name: Deploy Applications with Helm
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}

@@ -174,10 +174,10 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
     username = var.username
     password = random_password.db_password.result
     engine   = "postgres"
-    host     = aws_db_instance.main.endpoint
+    host     = aws_db_instance.main.address
     port     = aws_db_instance.main.port
     dbname   = var.database_name
-    url      = "postgresql://${var.username}:${random_password.db_password.result}@${aws_db_instance.main.endpoint}:${aws_db_instance.main.port}/${var.database_name}"
+    url      = "postgresql://${var.username}:${random_password.db_password.result}@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${var.database_name}"
   })
 }
 
